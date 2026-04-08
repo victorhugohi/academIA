@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>academIA</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --dim: #8b949e;
+      --green: #39d353;
+      --green-dim: #1a7f37;
+      --red: #f85149;
+      --yellow: #d29922;
+      --cyan: #58a6ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Courier New', 'Consolas', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Left Panel ────────────────────────── */
+    .panel-left {
+      width: 35%;
+      min-width: 300px;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .brand {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--green);
+      letter-spacing: 2px;
+    }
+    .brand span { color: var(--dim); font-size: 0.7rem; letter-spacing: 0; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--dim);
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.off { background: var(--red); }
+
+    label { color: var(--dim); font-size: 0.8rem; display: block; margin-bottom: 0.3rem; }
+    select {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      cursor: pointer;
+    }
+    select:focus { outline: 1px solid var(--green); }
+
+    .profile-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      font-size: 0.85rem;
+      display: none;
+    }
+    .profile-card .name { color: var(--green); font-weight: bold; font-size: 1rem; }
+    .profile-card .meta { color: var(--dim); margin: 0.3rem 0; }
+    .profile-card .interests { margin-top: 0.5rem; }
+    .profile-card .tag {
+      display: inline-block;
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      padding: 0.1rem 0.5rem;
+      margin: 0.15rem 0.15rem 0.15rem 0;
+      font-size: 0.75rem;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.6rem 1.2rem;
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-radius: 0;
+      width: 100%;
+    }
+    button:hover { background: var(--green); color: var(--bg); }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
+    button:disabled:hover { background: transparent; color: var(--green); }
+
+    .options {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 0.5rem;
+    }
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+    .checkbox-wrap input { accent-color: var(--green); }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    /* ── Right Panel ───────────────────────── */
+    .panel-right {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--dim);
+      font-size: 0.9rem;
+    }
+
+    /* Pipeline monitor */
+    .pipeline {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .pipeline-title {
+      color: var(--green);
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+      color: var(--dim);
+    }
+    .pipeline-step .step-icon { width: 16px; text-align: center; }
+    .pipeline-step .step-name { color: var(--text); min-width: 120px; }
+    .pipeline-step .step-time { color: var(--yellow); min-width: 70px; text-align: right; }
+    .pipeline-step .step-detail { color: var(--dim); }
+    .pipeline-total {
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      color: var(--green);
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      color: var(--green);
+      padding: 2rem 0;
+    }
+    .cursor-blink::after {
+      content: '█';
+      animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Query display */
+    .query-box {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      display: none;
+    }
+    .query-box .label { color: var(--dim); }
+    .query-box code { color: var(--green); }
+
+    /* Result cards */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .results-header h2 {
+      font-size: 1rem;
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--green); }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .card-title { color: var(--text); font-weight: bold; }
+    .card-id { color: var(--dim); font-size: 0.8rem; }
+    .card-score {
+      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 0.15rem 0.5rem;
+      border: 1px solid;
+    }
+    .card-desc { color: var(--dim); font-size: 0.85rem; margin: 0.5rem 0; }
+    .card-explanation {
+      border-left: 2px solid var(--green);
+      padding-left: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      min-height: 1.2em;
+    }
+
+    .score-high { color: var(--green); border-color: var(--green); }
+    .score-mid { color: var(--yellow); border-color: var(--yellow); }
+    .score-low { color: var(--dim); border-color: var(--dim); }
+
+    /* Error */
+    .error {
+      background: var(--surface);
+      border: 1px solid var(--red);
+      color: var(--red);
+      padding: 1rem;
+      display: none;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      .panel-left { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Left Panel -->
+    <div class="panel-left">
+      <div>
+        <div class="brand">academIA<br><span>course recommendation system</span></div>
+      </div>
+
+      <div class="status">
+        <span class="dot off" id="ollama-dot"></span>
+        <span id="ollama-status">Checking Ollama...</span>
+      </div>
+      <div class="status">
+        <span class="dot off" id="index-dot"></span>
+        <span id="index-status">Checking index...</span>
+      </div>
+
+      <div>
+        <label for="student-select">SELECT STUDENT</label>
+        <select id="student-select">
+          <option value="">-- choose --</option>
+        </select>
+      </div>
+
+      <div class="profile-card" id="profile">
+        <div class="name" id="p-name"></div>
+        <div class="meta" id="p-meta"></div>
+        <div class="interests" id="p-interests"></div>
+      </div>
+
+      <div>
+        <button id="recommend-btn" disabled>[ GET RECOMMENDATIONS ]</button>
+        <div class="options">
+          <label class="checkbox-wrap">
+            <input type="checkbox" id="use-llm" checked>
+            LLM explanations
+          </label>
+        </div>
+      </div>
+
+      <div class="footer">
+        FAISS + sentence-transformers + Ollama<br>
+        Built for FLISoL &middot; 100% open source
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel-right">
+      <div class="placeholder" id="placeholder">
+        &gt; Select a student to begin_<span class="cursor-blink"></span>
+      </div>
+
+      <div class="loading" id="loading">
+        &gt; Analyzing academic profile...<span class="cursor-blink"></span>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="pipeline" id="pipeline">
+        <div class="pipeline-title">&gt; PIPELINE MONITOR</div>
+        <div id="pipeline-steps"></div>
+        <div class="pipeline-total" id="pipeline-total"></div>
+      </div>
+
+      <div class="query-box" id="query-box">
+        <span class="label">query vector from:</span> <code id="query-text"></code>
+      </div>
+
+      <div class="results-header" id="results-header">
+        <h2>&gt; RECOMMENDATIONS</h2>
+        <span style="color:var(--dim);font-size:0.8rem" id="elapsed"></span>
+      </div>
+      <div id="cards"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.origin;
+    let students = [];
+
+    // ── Init ──────────────────────────────────
+    async function init() {
+      try {
+        const [healthRes, studentsRes] = await Promise.all([
+          fetch(`${API}/api/health`),
+          fetch(`${API}/api/students`),
+        ]);
+        const health = await healthRes.json();
+        students = await studentsRes.json();
+
+        // Ollama status
+        const ollamaDot = document.getElementById('ollama-dot');
+        const ollamaStatus = document.getElementById('ollama-status');
+        if (health.ollama) {
+          ollamaDot.className = 'dot on';
+          ollamaStatus.textContent = `Ollama online (${health.model})`;
+        } else {
+          ollamaDot.className = 'dot off';
+          ollamaStatus.textContent = 'Ollama offline — fallback mode';
+        }
+
+        // Index status
+        const indexDot = document.getElementById('index-dot');
+        const indexStatus = document.getElementById('index-status');
+        if (health.index_loaded) {
+          indexDot.className = 'dot on';
+          indexStatus.textContent = `${health.courses_count} courses indexed`;
+        } else {
+          indexDot.className = 'dot off';
+          indexStatus.textContent = 'Index not loaded';
+        }
+
+        // Populate dropdown
+        const sel = document.getElementById('student-select');
+        students.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.name} — ${s.major}, Year ${s.year}`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        showError('Cannot connect to AcademIA API.\nRun: python -m uvicorn src.api.main:app --reload');
+      }
+    }
+
+    // ── Student select ────────────────────────
+    document.getElementById('student-select').addEventListener('change', (e) => {
+      const student = students.find(s => s.id === e.target.value);
+      const profile = document.getElementById('profile');
+      const btn = document.getElementById('recommend-btn');
+
+      if (student) {
+        btn.disabled = false;
+        profile.style.display = 'block';
+        document.getElementById('p-name').textContent = student.name;
+        document.getElementById('p-meta').textContent =
+          `${student.major} · Year ${student.year} · ${student.completed_courses.length} courses done`;
+        const tags = document.getElementById('p-interests');
+        tags.innerHTML = '';
+        student.interests.forEach(i => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = i;
+          tags.appendChild(span);
+        });
+      } else {
+        btn.disabled = true;
+        profile.style.display = 'none';
+      }
+    });
+
+    // ── Recommend ─────────────────────────────
+    document.getElementById('recommend-btn').addEventListener('click', async () => {
+      const studentId = document.getElementById('student-select').value;
+      const useLlm = document.getElementById('use-llm').checked;
+      if (!studentId) return;
+
+      // Reset UI
+      hide('placeholder'); hide('error'); hide('pipeline'); hide('query-box');
+      hide('results-header');
+      document.getElementById('cards').innerHTML = '';
+      show('loading');
+      document.getElementById('recommend-btn').disabled = true;
+
+      try {
+        const res = await fetch(`${API}/api/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: studentId, top_k: 5, use_llm: useLlm }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || `API returned ${res.status}`);
+        }
+        const data = await res.json();
+        hide('loading');
+        renderPipeline(data.pipeline, data.elapsed_seconds);
+        renderQuery(data.query_text);
+        renderResults(data);
+      } catch (e) {
+        hide('loading');
+        showError(e.message);
+      } finally {
+        document.getElementById('recommend-btn').disabled = false;
+      }
+    });
+
+    // ── Render pipeline ───────────────────────
+    function renderPipeline(steps, totalSec) {
+      const container = document.getElementById('pipeline-steps');
+      container.innerHTML = '';
+
+      const icons = {
+        hard_filter: '⊘', embed_query: '◈', faiss_search: '⟐', llm_explain: '◉'
+      };
+      const labels = {
+        hard_filter: 'FILTER', embed_query: 'EMBED', faiss_search: 'SEARCH', llm_explain: 'LLM'
+      };
+
+      steps.forEach(step => {
+        const div = document.createElement('div');
+        div.className = 'pipeline-step';
+        div.innerHTML = `
+          <span class="step-icon">${icons[step.name] || '·'}</span>
+          <span class="step-name">${labels[step.name] || step.name}</span>
+          <span class="step-time">${formatMs(step.duration_ms)}</span>
+          <span class="step-detail">${step.detail}</span>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('pipeline-total').textContent =
+        `TOTAL: ${(totalSec * 1000).toFixed(0)}ms`;
+      show('pipeline');
+    }
+
+    function formatMs(ms) {
+      if (ms < 1) return '<1ms';
+      if (ms < 1000) return ms.toFixed(0) + 'ms';
+      return (ms / 1000).toFixed(1) + 's';
+    }
+
+    // ── Render query ──────────────────────────
+    function renderQuery(text) {
+      document.getElementById('query-text').textContent = `"${text}"`;
+      show('query-box');
+    }
+
+    // ── Render results ────────────────────────
+    function renderResults(data) {
+      document.getElementById('elapsed').textContent = `${data.elapsed_seconds.toFixed(2)}s`;
+      show('results-header');
+
+      const cards = document.getElementById('cards');
+      const allExplanations = [];
+
+      data.recommendations.forEach((rec, i) => {
+        const score = rec.similarity_score;
+        const scoreClass = score > 0.6 ? 'score-high' : score > 0.4 ? 'score-mid' : 'score-low';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-top">
+            <div>
+              <div class="card-title">${i + 1}. ${rec.course.title}</div>
+              <div class="card-id">${rec.course.id} · ${rec.course.department} · ${rec.course.difficulty}</div>
+            </div>
+            <div class="card-score ${scoreClass}">${score.toFixed(2)}</div>
+          </div>
+          <div class="card-desc">${rec.course.description}</div>
+          ${rec.explanation ? `<div class="card-explanation" id="expl-${i}"></div>` : ''}
+        `;
+        cards.appendChild(card);
+
+        if (rec.explanation) {
+          allExplanations.push({ el: document.getElementById(`expl-${i}`), text: rec.explanation });
+        }
+      });
+
+      // Typewriter effect — sequential
+      typewriterSequence(allExplanations, 0);
+    }
+
+    function typewriterSequence(items, index) {
+      if (index >= items.length) return;
+      const { el, text } = items[index];
+      let charIdx = 0;
+      function type() {
+        if (charIdx < text.length) {
+          el.textContent += text[charIdx];
+          charIdx++;
+          setTimeout(type, 14);
+        } else {
+          typewriterSequence(items, index + 1);
+        }
+      }
+      type();
+    }
+
+    // ── Helpers ───────────────────────────────
+    function show(id) { document.getElementById(id).style.display = 'block'; }
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = '> ERROR: ' + msg;
+      show('error');
+    }
+
+    init();
+  </script>
+</body>
+</html>
